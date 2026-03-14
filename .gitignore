@@ -1,0 +1,44 @@
+# Entorno Virtual
+venv/
+env/
+ENV/
+*.pyc
+__pycache__/
+*.egg-info/
+dist/
+build/
+
+# Credenciales (NUNCA SUBIR)
+.env
+.env.local
+.env.*.local
+
+# Logs y datos locales
+conversations.json
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Temporal
+*.tmp
+temp/
+.cache/
+
+# Testing
+.pytest_cache/
+htmlcov/
+coverage.xml
