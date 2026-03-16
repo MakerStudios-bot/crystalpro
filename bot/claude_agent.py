@@ -163,6 +163,30 @@ IMPORTANTE: Mantén las respuestas cortas (máximo 3-4 párrafos). El cliente es
 
         return False, ""
 
+    def detectar_saludo(self, texto: str) -> bool:
+        """
+        Detecta si el mensaje es un saludo inicial.
+
+        Args:
+            texto (str): Texto del mensaje
+
+        Returns:
+            bool: True si es un saludo
+        """
+        saludos = [
+            "hola", "buenos días", "buenos tardes", "buenas noches",
+            "buenos noches", "buen día", "buena tarde", "buena noche",
+            "hi", "hello", "hey", "qué tal", "cómo estás", "cómo está"
+        ]
+        texto_lower = texto.lower().strip()
+
+        # Detectar si el mensaje es principalmente un saludo
+        for saludo in saludos:
+            if saludo in texto_lower:
+                return True
+
+        return False
+
 
 def crear_agent_claude(config_file: str = "config.json") -> ClaudeAgent:
     """
