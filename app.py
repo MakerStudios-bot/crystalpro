@@ -15,6 +15,7 @@ from bot.instagram import crear_cliente_instagram
 from bot.claude_agent import crear_agent_claude
 from bot.email_notifier import crear_notificador_email
 from bot.conversation_log import guardar_mensaje, obtener_historial, inicializar_log
+from bot.escalado_state import marcar_usuario_escalado, usuario_esta_escalado
 
 # Cargar variables de entorno desde .env
 load_dotenv()
@@ -135,6 +136,16 @@ def procesar_mensaje(evento: dict):
     # Guardar el mensaje del usuario en el log
     guardar_mensaje(sender_id, "usuario", texto)
 
+    # NUEVO: Si el usuario ya está escalado, responder con mensaje de espera
+    if usuario_esta_escalado(sender_id):
+        print(f"⏳ Usuario {sender_id} ya está escalado - respondiendo con mensaje de espera")
+        config = claude_agent.config
+        mensaje_espera = config.get("escalado", {}).get("mensaje_espera", "Nuestro equipo lo contactará pronto. Por favor espere.")
+        if instagram_client.enviar_mensaje(sender_id, mensaje_espera):
+            guardar_mensaje(sender_id, "bot", mensaje_espera)
+            print(f"✓ Mensaje de espera enviado")
+        return
+
     # Obtener el historial de conversación
     historial = obtener_historial(sender_id)
 
@@ -179,6 +190,9 @@ def manejar_escalado(sender_id: str, texto: str, palabra_clave: str, historial: 
         palabra_clave (str): Palabra clave que triggeró el escalado
         historial (list): Historial de conversación
     """
+    # NUEVO: Marcar usuario como escalado para pausar las respuestas de Claude
+    marcar_usuario_escalado(sender_id, palabra_clave)
+
     # Obtener el mensaje de escalado del config
     config = claude_agent.config
     mensaje_escalado = config.get("escalado", {}).get("mensaje_escalado", "")

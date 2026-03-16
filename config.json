@@ -27,8 +27,24 @@
     "pago": "Transferencia bancaria o efectivo. Se solicita 50% de anticipo."
   },
   "escalado": {
-    "trigger_palabras": ["hablar con alguien", "llamar", "urgente", "reclamo", "problema"],
+    "trigger_palabras": [
+      "hablar con alguien",
+      "hablar con persona",
+      "persona real",
+      "humano",
+      "agente",
+      "quiero hablar",
+      "necesito hablar",
+      "llamar",
+      "urgente",
+      "reclamo",
+      "problema",
+      "gerente",
+      "supervisor",
+      "soporte"
+    ],
     "mensaje_escalado": "Entendido. Le paso con nuestro equipo para atenderle personalmente. En breve se comunicarán con usted.",
+    "mensaje_espera": "Su solicitud ya fue recibida. Nuestro equipo lo contactará a la brevedad. Por favor espere.",
     "notificar_a": "makerstudios.cl@gmail.com"
   },
   "mensaje_bienvenida": "Buen día. Gracias por contactarse con MakerStudios. ¿En qué le podemos ayudar con respecto a nuestro servicio de impresión 3D?"
