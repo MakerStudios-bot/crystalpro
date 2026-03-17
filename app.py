@@ -8,6 +8,7 @@ import json
 import os
 import hmac
 import hashlib
+import time
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 
@@ -15,10 +16,13 @@ from bot.instagram import crear_cliente_instagram
 from bot.claude_agent import crear_agent_claude
 from bot.email_notifier import crear_notificador_email
 from bot.conversation_log import guardar_mensaje, obtener_historial, inicializar_log
-from bot.escalado_state import marcar_usuario_escalado, usuario_esta_escalado
+from bot.escalado_state import marcar_usuario_escalado, usuario_esta_escalado, desescalar_usuario, obtener_usuarios_escalados
 
 # Cargar variables de entorno desde .env
 load_dotenv()
+
+# Timeout para usuarios escalados (15 minutos = 900 segundos)
+TIMEOUT_ESCALADO = 15 * 60
 
 # Crear aplicación Flask
 app = Flask(__name__)
@@ -136,15 +140,29 @@ def procesar_mensaje(evento: dict):
     # Guardar el mensaje del usuario en el log
     guardar_mensaje(sender_id, "usuario", texto)
 
-    # NUEVO: Si el usuario ya está escalado, responder con mensaje de espera
+    # Si el usuario ya está escalado, verificar timeout
     if usuario_esta_escalado(sender_id):
-        print(f"⏳ Usuario {sender_id} ya está escalado - respondiendo con mensaje de espera")
-        config = claude_agent.config
-        mensaje_espera = config.get("escalado", {}).get("mensaje_espera", "Nuestro equipo lo contactará pronto. Por favor espere.")
-        if instagram_client.enviar_mensaje(sender_id, mensaje_espera):
-            guardar_mensaje(sender_id, "bot", mensaje_espera)
-            print(f"✓ Mensaje de espera enviado")
-        return
+        usuarios_escalados = obtener_usuarios_escalados()
+        escalado_info = usuarios_escalados.get(sender_id, {})
+        escalado_en = escalado_info.get("escalado_en")
+
+        # Calcular tiempo pasado desde el escalado
+        tiempo_pasado = time.time() - escalado_en if escalado_en else 0
+
+        if tiempo_pasado > TIMEOUT_ESCALADO:
+            # Timeout expirado, desescalar y continuar con respuesta normal
+            print(f"⏰ Timeout de escalado expirado para usuario {sender_id} - desescalando")
+            desescalar_usuario(sender_id)
+            # Continuar con la respuesta normal (no hacer return)
+        else:
+            # Aún dentro del timeout, enviar mensaje de espera
+            print(f"⏳ Usuario {sender_id} escalado hace {int(tiempo_pasado/60)} min - respondiendo con mensaje de espera")
+            config = claude_agent.config
+            mensaje_espera = config.get("escalado", {}).get("mensaje_espera", "Nuestro equipo lo contactará pronto. Por favor espere.")
+            if instagram_client.enviar_mensaje(sender_id, mensaje_espera):
+                guardar_mensaje(sender_id, "bot", mensaje_espera)
+                print(f"✓ Mensaje de espera enviado")
+            return
 
     # Obtener el historial de conversación
     historial = obtener_historial(sender_id)

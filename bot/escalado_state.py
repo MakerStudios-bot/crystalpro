@@ -5,6 +5,7 @@ Guarda qué usuarios están esperando atención humana.
 
 import json
 import os
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -35,7 +36,7 @@ def marcar_usuario_escalado(sender_id: str, palabra_clave: str):
         escalados = {}
 
     escalados[sender_id] = {
-        "escalado_en": datetime.now().isoformat(),
+        "escalado_en": time.time(),
         "escalado_por": palabra_clave
     }
 
